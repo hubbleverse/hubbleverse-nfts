@@ -10,27 +10,23 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract Hubbleverse is ERC1155SupplyUpgradeable, ERC1155PresetMinterPauserUpgradeable {
     using Strings for uint256;
 
+    bytes32 public constant SET_URI_ROLE = keccak256("SET_URI_ROLE");
+
+    mapping(uint256 => string) _uri;
+
     uint256[50] private __gap;
 
-    function initialize(string memory _uri) public override {
-        super.initialize(_uri);
+    function initialize(string memory uri_) public override {
+        super.initialize(uri_);
     }
 
-    function uri(uint256 tokenId)
+    function uri(uint256 id)
         public
         view
         override
         returns (string memory)
     {
-        require(
-            exists(tokenId),
-            "Hubbleverse: URI query for nonexistent token"
-        );
-        string memory baseURI = super.uri(0);
-        return
-            bytes(baseURI).length > 0
-                ? string(abi.encodePacked(baseURI, tokenId.toString()))
-                : "";
+        return _uri[id];
     }
 
     function mintToBatch(
@@ -45,6 +41,11 @@ contract Hubbleverse is ERC1155SupplyUpgradeable, ERC1155PresetMinterPauserUpgra
         }
     }
 
+    function setURI(uint256 id, string memory newuri) external {
+        require(hasRole(SET_URI_ROLE, _msgSender()), "Hubbleverse: must have SET_URI_ROLE");
+        _uri[id] = newuri;
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -53,11 +54,6 @@ contract Hubbleverse is ERC1155SupplyUpgradeable, ERC1155PresetMinterPauserUpgra
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
-    }
-
-    function setURI(string memory newuri) external {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Hubbleverse: must have admin role to set uri");
-        _setURI(newuri);
     }
 
     function _beforeTokenTransfer(

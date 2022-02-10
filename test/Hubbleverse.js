@@ -9,13 +9,12 @@ describe('Hubbleverse', function() {
 
         Hubbleverse = await ethers.getContractFactory('Hubbleverse')
         TransparentUpgradeableProxy = await ethers.getContractFactory('TransparentUpgradeableProxy')
-        baseUri = 'ipfs://QmSenTk76m3bNPCX3SPGPMqAjVPuzANYFpqa6XbXGhiHqH/'
 
         hubbleverse = await Hubbleverse.deploy()
         const proxy = await TransparentUpgradeableProxy.deploy(
             hubbleverse.address,
             proxyAdmin,
-            hubbleverse.interface.encodeFunctionData('initialize', [baseUri])
+            hubbleverse.interface.encodeFunctionData('initialize', [''])
         )
         hubbleverse = await ethers.getContractAt('Hubbleverse', proxy.address)
         minterRole = await hubbleverse.MINTER_ROLE()
@@ -77,14 +76,19 @@ describe('Hubbleverse', function() {
 
     it('setURI', async function() {
         for (let i = 0; i < 4; i++) {
-            expect(await hubbleverse.uri(i)).to.eq(baseUri + i)
+            expect(await hubbleverse.uri(i)).to.eq('')
         }
 
-        const newURI = 'hubbleverse.com/'
-        await hubbleverse.setURI(newURI)
+        await expect(
+            hubbleverse.connect(minter).setURI(0, 'uri0')
+        ).to.be.revertedWith('Hubbleverse: must have SET_URI_ROLE')
 
+        await hubbleverse.grantRole(await hubbleverse.SET_URI_ROLE(), minter.address)
         for (let i = 0; i < 4; i++) {
-            expect(await hubbleverse.uri(i)).to.eq(newURI + i)
+            await hubbleverse.connect(minter).setURI(i, 'uri' + i)
+        }
+        for (let i = 0; i < 4; i++) {
+            expect(await hubbleverse.uri(i)).to.eq(`uri${i}`)
         }
     })
 })
