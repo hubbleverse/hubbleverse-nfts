@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.1",
-    "@openzeppelin/contracts-upgradeable": "^4.4.2"
+    "@openzeppelin/contracts-upgradeable": "^4.4.2",
+    "csv-parser": "^3.0.0"
   }
 }
